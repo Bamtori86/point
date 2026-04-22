@@ -2,100 +2,114 @@ import streamlit as st
 import time
 
 # 1. 페이지 설정
-st.set_page_config(page_title="스마트 점수판", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="프리미엄 스마트 점수판", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. 강력한 스타일 적용 (버튼 색상, 크기, 상단 정렬 강제)
+# 2. CSS 스타일 적용 (색상, 정렬, 크기 최적화)
 st.markdown("""
     <style>
-    /* 전체 배경 */
-    .stApp { background-color: #111; }
+    /* 전체 배경 및 폰트 */
+    .stApp { background-color: #0E1117; }
     
-    /* [상단 설정바] 숫자입력창과 버튼 높이 통일 및 정렬 */
-    div[data-testid="stNumberInput"] {
-        height: 60px !important;
-    }
-    div[data-testid="stNumberInput"] input {
-        height: 60px !important;
-        font-size: 30px !important;
-    }
-    
-    /* 상단 버튼들 (시간적용, START/PAUSE) 높이 강제 고정 */
-    .top-btn-container button {
-        height: 60px !important;
-        margin-top: 28px !important;
-        font-size: 20px !important;
-        font-weight: bold !important;
-        background-color: #333 !important;
-        color: white !important;
-        border: 1px solid #555 !important;
+    /* 상단 컨트롤바 정렬 */
+    .top-bar {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
     }
 
-    /* 타이머 숫자판 */
+    /* 타이머 디스플레이 */
     .timer-display {
-        font-size: 140px !important;
-        font-weight: bold;
+        font-size: 120px !important;
+        font-weight: 900;
         text-align: center;
-        color: #FFFFFF;
-        background: #222;
-        border-radius: 15px;
+        color: #00FF00; /* 네온 그린 */
+        background: #1E1E1E;
+        border-radius: 20px;
         padding: 10px;
-        margin: 10px 0;
-        border: 4px solid #444;
+        margin: 20px 0;
+        border: 5px solid #333;
         font-family: 'Courier New', monospace;
+        text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
     }
 
-    /* [중요] 팀별 점수 버튼 색상 및 크기 강제 적용 */
-    /* 팀 A (빨강 상자) */
-    div[data-testid="column"]:nth-of-type(1) div.stButton > button {
-        height: 400px !important;
-        background-color: #FF0000 !important;
-        color: white !important;
-        font-size: 250px !important;
-        font-weight: 900 !important;
-        border-radius: 20px !important;
-        border: none !important;
-        box-shadow: 0 10px #cc0000 !important;
-    }
-
-    /* 팀 B (파랑 상자) */
-    div[data-testid="column"]:nth-of-type(3) div.stButton > button {
-        height: 400px !important;
-        background-color: #0000FF !important;
-        color: white !important;
-        font-size: 250px !important;
-        font-weight: 900 !important;
-        border-radius: 20px !important;
-        border: none !important;
-        box-shadow: 0 10px #0000cc !important;
-    }
-
-    /* 세트 점수 버튼 (중앙) */
-    div[data-testid="column"]:nth-of-type(2) div.stButton > button {
-        height: 130px !important;
-        background-color: #444 !important;
-        color: white !important;
-        font-size: 70px !important;
+    /* 모든 버튼 기본 설정 */
+    .stButton > button {
+        width: 100% !important;
+        border-radius: 10px !important;
         font-weight: bold !important;
-        border-radius: 15px !important;
+        transition: all 0.2s;
     }
 
-    /* 하단 작은 버튼들 (취소, 교체) */
-    .lower-btn button {
-        height: 60px !important;
-        font-size: 22px !important;
-        background-color: #222 !important;
+    /* 팀 A 점수 버튼 (빨강) */
+    div[data-testid="column"]:nth-of-type(1) .score-btn button {
+        height: 350px !important;
+        background-color: #D32F2F !important; /* 강렬한 레드 */
         color: white !important;
-        border: 1px solid #444 !important;
+        font-size: 200px !important;
+        border: none !important;
+    }
+
+    /* 팀 B 점수 버튼 (파랑) */
+    div[data-testid="column"]:nth-of-type(3) .score-btn button {
+        height: 350px !important;
+        background-color: #1976D2 !important; /* 강렬한 블루 */
+        color: white !important;
+        font-size: 200px !important;
+        border: none !important;
+    }
+
+    /* 중앙 세트 영역 */
+    .set-container {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+    
+    .set-label {
+        font-size: 40px !important;
+        font-weight: 900 !important;
+        color: white;
+        margin-bottom: 10px;
+    }
+
+    /* 세트 점수 버튼 */
+    .set-btn-a button {
+        background-color: #D32F2F !important;
+        font-size: 50px !important;
+        height: 100px !important;
+        margin-bottom: 5px !important;
+    }
+    .set-btn-b button {
+        background-color: #1976D2 !important;
+        font-size: 50px !important;
+        height: 100px !important;
+    }
+
+    /* 하단 보조 버튼 (취소, 교체) */
+    .aux-btn button {
+        height: 60px !important;
+        font-size: 20px !important;
+        background-color: #333 !important;
+        color: #BBB !important;
         margin-top: 10px !important;
     }
 
-    /* 팀 이름 입력창 */
+    /* 팀 이름 입력창 스타일링 */
     div[data-testid="stTextInput"] input {
-        font-size: 35px !important;
-        font-weight: bold !important;
-        height: 60px !important;
+        font-size: 30px !important;
+        height: 70px !important;
         text-align: center !important;
+        background-color: #262730 !important;
+        color: white !important;
+        border: 2px solid #444 !important;
     }
+    
+    /* 숫자 입력창 높이 조절 */
+    div[data-testid="stNumberInput"] { margin-bottom: 0px !important; }
+    
     </style>
     """, unsafe_allow_html=True)
 
@@ -104,8 +118,9 @@ if 'score_a' not in st.session_state:
     st.session_state.update({
         'score_a': 0, 'score_b': 0,
         'set_a': 0, 'set_b': 0,
-        'team_a': "A 팀", 'team_b': "B 팀",
+        'team_a': "TEAM A", 'team_b': "TEAM B",
         'timer_seconds': 300,
+        'initial_seconds': 300,
         'timer_running': False
     })
 
@@ -115,70 +130,90 @@ if st.session_state.timer_running and st.session_state.timer_seconds > 0:
     st.session_state.timer_seconds -= 1
     st.rerun()
 
-# --- 상단 설정 영역 (한 줄 배치 및 높이 정렬) ---
-t_col1, t_col2, t_col3 = st.columns([2, 1, 1])
+# --- 상단 설정 영역 (정렬 최적화) ---
+t_col1, t_col2, t_col3, t_col4 = st.columns([2, 1, 1, 1])
 
 with t_col1:
-    minutes = st.number_input("시간 설정 (분)", min_value=0, value=st.session_state.timer_seconds // 60)
+    new_mins = st.number_input("분 설정", min_value=0, value=st.session_state.initial_seconds // 60)
 with t_col2:
-    st.markdown('<div class="top-btn-container">', unsafe_allow_html=True)
+    st.write(" ") # 수직 정렬용 여백
     if st.button("⚙️ 시간 적용"):
-        st.session_state.timer_seconds = minutes * 60
+        st.session_state.timer_seconds = new_mins * 60
+        st.session_state.initial_seconds = new_mins * 60
         st.session_state.timer_running = False
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 with t_col3:
-    st.markdown('<div class="top-btn-container">', unsafe_allow_html=True)
+    st.write(" ")
     btn_label = "⏸ PAUSE" if st.session_state.timer_running else "▶ START"
     if st.button(btn_label):
         st.session_state.timer_running = not st.session_state.timer_running
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+with t_col4:
+    st.write(" ")
+    if st.button("⏹ STOP/RESET"):
+        st.session_state.timer_seconds = st.session_state.initial_seconds
+        st.session_state.timer_running = False
+        st.rerun()
 
 # --- 타이머 숫자판 ---
 mins, secs = divmod(st.session_state.timer_seconds, 60)
 st.markdown(f'<div class="timer-display">{mins:02d}:{secs:02d}</div>', unsafe_allow_html=True)
 
-st.divider()
-
 # --- 메인 점수판 UI ---
-col1, col2, col3 = st.columns([4, 2, 4])
+col_left, col_mid, col_right = st.columns([4, 2, 4])
 
-with col1:
-    st.session_state.team_a = st.text_input("TEAM NAME", st.session_state.team_a, key="n_a")
-    if st.button(f"{st.session_state.score_a}", key="b_a"):
+# 왼쪽 팀 (A)
+with col_left:
+    st.session_state.team_a = st.text_input("TEAM A NAME", st.session_state.team_a, key="in_a", label_visibility="collapsed")
+    st.markdown('<div class="score-btn">', unsafe_allow_html=True)
+    if st.button(f"{st.session_state.score_a}", key="btn_score_a"):
         st.session_state.score_a += 1
         st.rerun()
-    st.markdown('<div class="lower-btn">', unsafe_allow_html=True)
-    if st.button(f"↩ {st.session_state.team_a} 취소", key="u_a"):
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="aux-btn">', unsafe_allow_html=True)
+    if st.button(f"↩ {st.session_state.team_a} -1", key="undo_a"):
         st.session_state.score_a = max(0, st.session_state.score_a - 1)
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-with col2:
-    st.markdown("<h2 style='margin-bottom:0;'>SET</h2>", unsafe_allow_html=True)
-    if st.button(f"{st.session_state.set_a}", key="s_a"):
+# 중앙 (세트 및 교체)
+with col_mid:
+    st.markdown('<div class="set-container">', unsafe_allow_html=True)
+    st.markdown('<div class="set-label">SET</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="set-btn-a">', unsafe_allow_html=True)
+    if st.button(f"{st.session_state.set_a}", key="btn_set_a"):
         st.session_state.set_a += 1
         st.rerun()
-    if st.button(f"{st.session_state.set_b}", key="s_b"):
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="set-btn-b">', unsafe_allow_html=True)
+    if st.button(f"{st.session_state.set_b}", key="btn_set_b"):
         st.session_state.set_b += 1
         st.rerun()
-    st.markdown('<div class="lower-btn">', unsafe_allow_html=True)
-    if st.button("🔄 교체", key="swap_btn"):
-        # 팀명, 점수, 세트 한꺼번에 교체
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="aux-btn">', unsafe_allow_html=True)
+    if st.button("🔄 SWAP", key="swap_btn"):
         st.session_state.team_a, st.session_state.team_b = st.session_state.team_b, st.session_state.team_a
         st.session_state.score_a, st.session_state.score_b = st.session_state.score_b, st.session_state.score_a
         st.session_state.set_a, st.session_state.set_b = st.session_state.set_b, st.session_state.set_a
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with col3:
-    st.session_state.team_b = st.text_input("TEAM NAME", st.session_state.team_b, key="n_b")
-    if st.button(f"{st.session_state.score_b}", key="b_b"):
+# 오른쪽 팀 (B)
+with col_right:
+    st.session_state.team_b = st.text_input("TEAM B NAME", st.session_state.team_b, key="in_b", label_visibility="collapsed")
+    st.markdown('<div class="score-btn">', unsafe_allow_html=True)
+    if st.button(f"{st.session_state.score_b}", key="btn_score_b"):
         st.session_state.score_b += 1
         st.rerun()
-    st.markdown('<div class="lower-btn">', unsafe_allow_html=True)
-    if st.button(f"↩ {st.session_state.team_b} 취소", key="u_b"):
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="aux-btn">', unsafe_allow_html=True)
+    if st.button(f"↩ {st.session_state.team_b} -1", key="undo_b"):
         st.session_state.score_b = max(0, st.session_state.score_b - 1)
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
